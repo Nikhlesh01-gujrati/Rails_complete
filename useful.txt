@@ -1,0 +1,281 @@
+﻿Redemo Rails application:-
+1. rails new redemo
+2. add gem devise in gem file
+3. bundle install
+4. rails g devise:install
+5. config/environments/development.rb:
+    add this line :- config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+6. app/views/layouts/application.html.erb
+   add this line in body tag  
+      <p class="notice"><%= notice %></p>
+       <p class="alert"><%= alert %></p>
+7. rails g devise user
+   in this line user is a model
+8. rails db:migrate
+9. db/migrate/devise_create_user.rb
+    uncomment tracable & confirmable code
+    
+10. rails s
+      http://127.0.0.1:3000/users/sign_in
+      credential email:- nk@gmail.com , password:- nikhlesh
+11. rails c
+     User.fist
+     output:- #<User id: 1, email: "nk@gmail.com", created_at: "2023-09-26 05:02:22.567720000               +0000", updated_at: "2023-09-26 05:02:22.567720000 +0000">
+12. rails g controller homes index
+      create  app/controllers/homes_controller.rb
+       route  get 'homes/index'
+      invoke  erb
+      create    app/views/homes
+      create    app/views/homes/index.html.erb
+      invoke  test_unit
+      create    test/controllers/homes_controller_test.rb
+      invoke  helper
+      create    app/helpers/homes_helper.rb
+      invoke    test_unit
+13. routes.rb
+                  Rails.application.routes.draw do
+  		# get 'homes/index'
+ 		 devise_for :users
+  		# Define your application routes per the DSL in 						https://guides.rubyonrails.org/routing.html
+
+  		# Defines the root path route ("/")
+  		root "homes#index"
+	end
+14. app/views/layouts/application
+      add bootstrap links
+      add navbar,add logout, login section :- 
+<li class="nav-item">
+            <%if user_signed_in? %>
+            <%= link_to "Logout", destroy_user_session_path,data: {"turbo-method": :delete}, 
+            class:"nav-link" %>
+            <% else %>
+            <%= link_to "Login", new_user_session_path, 
+            class:"nav-link" %>
+            <% end %>
+          </li>
+15. cd config
+16 . rails generate scaffold Product name:string price:float description:text
+17. rails db:migrate
+18. rails c
+19. Product.all
+20. Product.new
+21. redirecr to http://127.0.0.1:3000/products and create new product
+22. rails g migration AddUserToProduct user:references
+23. db/migrate/add_user_to_product edit(beacause 1 product already create)
+class AddUserToProduct < ActiveRecord::Migration[7.0]
+  def change
+    add_reference :products, :user,foreign_key: true
+  end
+end
+24. rails db:migrate
+25. app/models/product.rb edit
+class Product < ApplicationRecord
+	belongs_to :user
+end
+26. gemfile to add rolify gem and run bundle install
+27. rails g rolify Role User
+28. rails db:migrate
+29. rails c
+30. User.first
+31. User.first.add_role :admin
+32. User.first.roles
+33. User.first.roles.pluck "name"
+34. User.first.roles.first[:name]
+35. edit app/modules/user.rb
+    class User < ApplicationRecord
+      rolify :before_add => :before_add_method
+      # rolify
+      # Include default devise modules. Others available are:
+      # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+      devise :database_authenticatable, :registerable,
+             :recoverable, :rememberable, :validatable
+    end
+36. create multiple user using signin 
+    ex:- nik@gmail.com ; nikhlesh
+37. rails g model cart user:references
+    invoke  active_record
+      create    db/migrate/20230926074931_create_carts.rb
+      create    app/models/cart.rb
+      invoke    test_unit
+      create      test/models/cart_test.rb
+      create      test/fixtures/carts.yml
+38. rails db:migrate
+39. edit user.rb
+    class User < ApplicationRecord
+      rolify :before_add => :before_add_method
+      # rolify
+      # Include default devise modules. Others available are:
+      # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+      devise :database_authenticatable, :registerable,
+             :recoverable, :rememberable, :validatable
+      # def before_add_method
+      #   debugger
+      # end
+      has_many :carts
+    end
+40. User.first
+41. Cart
+42. User.first.carts
+43. User.first.carts.create
+44. User.first.carts
+45. rails g model CartItem cart:references product:references
+     invoke  active_record
+          create    db/migrate/20230926080414_create_cart_items.rb
+          create    app/models/cart_item.rb
+          invoke    test_unit
+          create      test/models/cart_item_test.rb
+          create      test/fixtures/cart_items.yml
+46. rails db:migrate
+47. rails c
+48. CartItem
+49. CartItem.new
+50 rails g controller carts index
+    create  app/controllers/carts_controller.rb
+       route  get 'carts/index'
+      invoke  erb
+      create    app/views/carts
+      create    app/views/carts/index.html.erb
+      invoke  test_unit
+      create    test/controllers/carts_controller_test.rb
+      invoke  helper
+      create    app/helpers/carts_helper.rb
+      invoke    test_unit
+51. models/cart.rb
+    class Cart < ApplicationRecord
+      belongs_to :user
+      has_many :cart_items
+    end
+52. models/cart_item.rb
+    class CartItem < ApplicationRecord
+      belongs_to :cart
+      belongs_to :product
+    end
+53. models/product.rb
+    class Product < ApplicationRecord
+        belongs_to :user
+        has_many :cart_items
+    end
+54. rails c
+55. User.first.carts
+56. User.first.carts.first
+57. User.first.carts.first.cart_items
+58. edit routes.rb
+    Rails.application.routes.draw do
+      # get 'carts/index'
+      resources :products, :carts
+      # get 'homes/index'
+      devise_for :users
+      # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+
+      # Defines the root path route ("/")
+      root "homes#index"
+    end
+59. edit user.rb
+    class User < ApplicationRecord
+      rolify :before_add => :before_add_method
+      # rolify
+      # Include default devise modules. Others available are:
+      # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+      devise :database_authenticatable, :registerable,
+             :recoverable, :rememberable, :validatable
+      # def before_add_method
+      #   debugger
+      # end
+      has_many :carts
+      has_many :products
+    end
+60. rails c
+61. User.all
+62. User.first.products
+63. User.second.products
+64. edit view/layout/product/index.html.erb
+    <p style="color: green"><%= notice %></p>
+
+    <h1>Products</h1>
+
+    <div id="products">
+      <% @products.each do |product| %>
+        <div class="card" style="width: 18rem;">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCCOsJuowC14XZ0lp-U0ygmgiSiJZ-5Aa9_Q&usqp=CAU" class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title"><%=product.name%></h5>
+        <p class="card-text"><%=product.price%></p>
+        <p class="card-text"><%=product.description%></p>
+        <a href="#" class="btn btn-primary">Go somewhere</a>
+      </div>
+    </div>
+      <% end %>
+    </div>
+    <%= link_to "New product", new_product_path %>
+65. edit routes.rb
+    Rails.application.routes.draw do
+      # get 'carts/index'
+      get '/addproduct/:id', to: 'carts#addproduct', as:"addproduct"
+      # as is called alias to use prefix name not show in routes
+      resources :products, :carts
+      # get 'homes/index'
+      devise_for :users
+      # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+
+      # Defines the root path route ("/")
+      root "homes#index"
+    end
+66. edit view/layout/product/index.html.erb
+    <p style="color: green"><%= notice %></p>
+
+    <h1>Products</h1>
+
+    <div id="products">
+      <% @products.each do |product| %>
+        <div class="card" style="width: 18rem;">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCCOsJuowC14XZ0lp-U0ygmgiSiJZ-5Aa9_Q&usqp=CAU" class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title"><%=product.name%></h5>
+        <p class="card-text"><%=product.price%></p>
+        <p class="card-text"><%=product.description%></p>
+        <%= link_to "AddToCart", addproduct_path(product_id=product.id), class:"btn btn-primary" %>
+      </div>
+    </div>
+      <% end %>
+    </div>
+    <%= link_to "New product", new_product_path %>
+67. app/controllers/carts_controller.rb
+    class CartsController < ApplicationController
+      def index
+      end
+
+      def addproduct
+        @cartitems = current_user.carts.first.cart_items.new(product_id:params[:id])
+        @cartitems.save
+        debugger
+        render :index
+      end
+    end
+68. change products_controller.rb edit to create method
+     def create
+        # @product = Product.new(product_params)
+        @product = current_user.products.new(product_params)
+
+        respond_to do |format|
+          if @product.save
+            format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
+            format.json { render :show, status: :created, location: @product }
+          else
+            format.html { render :new, status: :unprocessable_entity }
+            format.json { render json: @product.errors, status: :unprocessable_entity }
+          end
+        end
+      end
+
+69. app/views/layouts/application.html.erb edit
+    <li class="nav-item">
+      <%= link_to "Home", products_path, class:"nav-link active" %>
+    </li>
+
+
+
+
+
+
+
+
